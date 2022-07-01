@@ -14,8 +14,10 @@ let Todos = [];
 // REST api
 
 const displayAllTodos = () => {
-	todoList.innerHTML = ""
-	axios.get("http://localhost:8000/posts").then(res => {
+	// todoList.innerHTML = ""
+	axios
+		.get("http://localhost:8000/posts")
+		.then(res => {
 			Todos = [...res.data]
 			if (Todos.length == 0) {
 				todoList.innerHTML += `
@@ -45,8 +47,8 @@ const displayAllTodos = () => {
 				};
 			}
 		})
+		.catch(err => console.log(err))
 		.then(() => console.log(`GET: Here's the list of todos`, Todos))
-		.catch(err => console.log(err));
 }
 
 // Initial display of all Todos
@@ -61,8 +63,8 @@ const addTodo = () => {
 			status: "Not complete",
 		})
 		.then(res => {
-			console.log(res.data)
-			displayAllTodos();
+			console.log(res.data);
+			// displayAllTodos();
 		})
 		.catch(err => console.error(err));
 
@@ -101,34 +103,24 @@ const addNewTodo = () => {
 const deleteTodo = (itemId) => {
 	axios
 		.delete(`http://localhost:8000/posts/${itemId}`)
-		.then(res => console.log(res.data))
+		.then(res => {
+			console.log(res.data);
+			// displayAllTodos();
+		})
 		.catch(err => console.log(err));
-
-	Todos = Todos.filter(todo => todo.id != itemId);
-
-	displayAllTodos();
 }
 
 const updateTodo = () => {
-	const todos = Todos.map(todo => {
-		if (todo.id === idField.value) {
-			axios
-				.patch(`http://localhost:8000/posts/${todo.id}`, {
-					body: bodyField.value,
-					timestamp: timeField.value,
-				})
-				.then(res => {
-					console.log(res.data)
-					displayAllTodos();
-				})
-				.catch(err => console.log(err));
-			return todo;
-		} else {
-			return todo;
-		}
-	})
-
-	Todos = todos;
+	axios
+		.patch(`http://localhost:8000/posts/${idField.value}`, {
+			body: bodyField.value,
+			timestamp: timeField.value,
+		})
+		.then(res => {
+			console.log(res.data);
+			// displayAllTodos();
+		})
+		.catch(err => console.log(err));
 	idField.value = "";
 	timeField.value = "";
 	bodyField.value = "";
@@ -138,22 +130,15 @@ const updateTodo = () => {
 }
 
 const markTodoAsComplete = (itemId) => {
-	const todos = Todos.map(todo => {
-		if (todo.id === itemId) {
-			axios.patch(`http://localhost:8000/posts/${todo.id}`, {
-				status: "Complete",
-			})
-			.then(res => {
-				console.log(res.data)
-				displayAllTodos();
-			})
-			.catch(err => console.log(err));
-			return todo;
-		} else {
-			return todo;
-		}
-	})
-	Todos = todos;
+	axios
+		.patch(`http://localhost:8000/posts/${itemId}`, {
+			status: "Complete",
+		})
+		.then(res => {
+			console.log(res.data);
+			// displayAllTodos();
+		})
+		.catch(err => console.log(err));
 }
 
 todoList.addEventListener('click', (e) => {
