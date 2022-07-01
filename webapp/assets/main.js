@@ -15,11 +15,10 @@ let Todos = [];
 
 const displayAllTodos = () => {
 	todoList.innerHTML = ""
-	axios.get("http://localhost:3000/posts").then(res => {	
-		Todos = [...res.data]
-		if (Todos.length == 0) {
-
-			todoList.innerHTML += `
+	axios.get("http://localhost:8000/posts").then(res => {
+			Todos = [...res.data]
+			if (Todos.length == 0) {
+				todoList.innerHTML += `
 			<div class = "empty-todo">
 			<img src="./assets/images/undraw_empty_xct9.png" alt="empty image" style="width: 50%;">
 			<br>
@@ -27,10 +26,10 @@ const displayAllTodos = () => {
 			<br>
 			</div>
 			`;
-		} else {		
-			for(let key in Todos){
-				let todo = Todos[key];
-				todoList.innerHTML += `
+			} else {
+				for (let key in Todos) {
+					let todo = Todos[key];
+					todoList.innerHTML += `
 				<div data-id="${todo.id}" class="todo-content-item">
 					<span class="todo-id">▪️ ${todo.id} ▪️</span>
 					${todo.status === "Complete" ? `<span style="text-decoration: line-through;" class="todo-text">${todo.body}</span>` : `<span class="todo-text">${todo.body}</span>`}
@@ -43,46 +42,40 @@ const displayAllTodos = () => {
 					</div>
 				</div>
 				`;
-			};
-		}
-	}).catch(err => console.log(err));
-
-	console.log(Todos);
+				};
+			}
+		})
+		.then(() => console.log(`GET: Here's the list of todos`, Todos))
+		.catch(err => console.log(err));
 }
 
+// Initial display of all Todos
 displayAllTodos();
 
-// const addTodo = () => {
-// 	const id = idField.value;
-// 	const timestamp = timeField.value;
-// 	const body = bodyField.value;
-// 	const status = "Not complete";
-// 	Todos.push({id,timestamp, body, status})
-// 	idField.value = "";
-// 	timeField.value = "";
-// 	bodyField.value = "";
-// 	displayAllTodos();
-// }
-
 const addTodo = () => {
-	const id = idField.value;
-	const timestamp = timeField.value;
-	const body = bodyField.value;
-	const status = "Not complete";
 	axios
-    .post('http://localhost:3000/posts', {id,timestamp, body, status})
-    .then(res => console.log(res.data))
-    .catch(err => console.error(err));
+		.post('http://localhost:8000/posts', {
+			id: idField.value,
+			timestamp: timeField.value,
+			body: bodyField.value,
+			status: "Not complete",
+		})
+		.then(res => {
+			console.log(res.data)
+			displayAllTodos();
+		})
+		.catch(err => console.error(err));
+
 	idField.value = "";
 	timeField.value = "";
 	bodyField.value = "";
-	displayAllTodos();
 }
 
 const editTodo = (itemId) => {
 	createTodoButton.style.display = "none"
 	updateTodoButton.style.display = "block"
-	const {id, timestamp, status, body} = Todos.filter(todo => todo.id == itemId)[0];
+
+	const { id, timestamp, status, body } = Todos.filter(todo => todo.id == itemId)[0];
 
 	idField.value = id;
 	timeField.value = getTimeStamp();
@@ -106,57 +99,77 @@ const addNewTodo = () => {
 }
 
 const deleteTodo = (itemId) => {
+	axios
+		.delete(`http://localhost:8000/posts/${itemId}`)
+		.then(res => console.log(res.data))
+		.catch(err => console.log(err));
+
 	Todos = Todos.filter(todo => todo.id != itemId);
+
 	displayAllTodos();
 }
 
 const updateTodo = () => {
-	const todos = Todos.map(todo=>{
-		if(todo.id === idField.value){
-			todo.status = "Not complete";
-			todo.body = bodyField.value;
-			todo.timestamp = timeField.value;
+	const todos = Todos.map(todo => {
+		if (todo.id === idField.value) {
+			axios
+				.patch(`http://localhost:8000/posts/${todo.id}`, {
+					body: bodyField.value,
+					timestamp: timeField.value,
+				})
+				.then(res => {
+					console.log(res.data)
+					displayAllTodos();
+				})
+				.catch(err => console.log(err));
 			return todo;
-		}else{
+		} else {
 			return todo;
 		}
 	})
+
 	Todos = todos;
 	idField.value = "";
 	timeField.value = "";
 	bodyField.value = "";
-	displayAllTodos();
+
 	updateTodoButton.style.display = "none"
 	createTodoButton.style.display = "block"
 }
 
 const markTodoAsComplete = (itemId) => {
-	const todos = Todos.map(todo=>{
-		if(todo.id === itemId){
-			todo.status = "Complete";
+	const todos = Todos.map(todo => {
+		if (todo.id === itemId) {
+			axios.patch(`http://localhost:8000/posts/${todo.id}`, {
+				status: "Complete",
+			})
+			.then(res => {
+				console.log(res.data)
+				displayAllTodos();
+			})
+			.catch(err => console.log(err));
 			return todo;
-		}else{
+		} else {
 			return todo;
 		}
 	})
 	Todos = todos;
-	displayAllTodos();
 }
 
-todoList.addEventListener('click', (e)=>{
+todoList.addEventListener('click', (e) => {
 
 	const id = e.target.parentElement.parentElement.dataset.id;
 
-	if(e.target.classList.contains('fa-edit')){
-	  editTodo(id);
+	if (e.target.classList.contains('fa-edit')) {
+		editTodo(id);
 	}
-	
-	if(e.target.classList.contains('fa-trash-alt')) {
-	  deleteTodo(id);
- 	}
 
-	if(e.target.classList.contains('fa-check')){
-	  markTodoAsComplete(id);
+	if (e.target.classList.contains('fa-trash-alt')) {
+		deleteTodo(id);
+	}
+
+	if (e.target.classList.contains('fa-check')) {
+		markTodoAsComplete(id);
 	}
 })
 
